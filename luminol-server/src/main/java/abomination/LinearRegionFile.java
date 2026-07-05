@@ -17,9 +17,11 @@ import org.slf4j.Logger;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -150,7 +152,7 @@ public class LinearRegionFile implements IRegionFile {
         buffer.position(buffer.position() + 11);
 
         int dataCount = buffer.getInt();
-        long fileLength = this.regionFile.toFile().length();
+        long fileLength = Files.size(this.regionFile);
         if (fileLength != HEADER_SIZE + dataCount + FOOTER_SIZE) {
             throw new IOException("Invalid file length: " + this.regionFile + " " + fileLength + " " + (HEADER_SIZE + dataCount + FOOTER_SIZE));
         }
@@ -393,8 +395,8 @@ public class LinearRegionFile implements IRegionFile {
     }
 
     private void writeToTempFile(Path tempPath) throws IOException {
-        try (FileOutputStream fileStream = new FileOutputStream(tempPath.toFile());
-             DataOutputStream dataStream = new DataOutputStream(fileStream)) {
+        try (FileChannel fileChannel = FileChannel.open(tempPath, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+             DataOutputStream dataStream = new DataOutputStream(java.nio.channels.Channels.newOutputStream(fileChannel))) {
 
             dataStream.writeLong(SUPERBLOCK);
             dataStream.writeByte(VERSION);
@@ -484,8 +486,7 @@ public class LinearRegionFile implements IRegionFile {
 
             dataStream.writeLong(SUPERBLOCK);
             dataStream.flush();
-            fileStream.getFD().sync();
-            fileStream.getChannel().force(true);
+            fileChannel.force(true);
         }
     }
 

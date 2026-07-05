@@ -266,6 +266,7 @@ public class LinearRegionFile implements IRegionFile {
     public static boolean USE_VIRTUAL_THREAD = true;
 
     private static final Set<LinearRegionFile> pendingFlush = ConcurrentHashMap.newKeySet();
+    private static final Object flushLock = new Object();
     private static volatile ScheduledFuture<?> flushTickFuture;
 
     private static ExecutorService saveExecutor;
@@ -324,9 +325,12 @@ public class LinearRegionFile implements IRegionFile {
     }
 
     private static void drainPendingFlushes() {
-        if (pendingFlush.isEmpty()) return;
-        final List<LinearRegionFile> batch = new ArrayList<>(pendingFlush);
-        pendingFlush.clear();
+        final List<LinearRegionFile> batch;
+        synchronized (flushLock) {
+            if (pendingFlush.isEmpty()) return;
+            batch = new ArrayList<>(pendingFlush);
+            pendingFlush.clear();
+        }
         final ExecutorService exec = getSaveExecutor();
         for (final LinearRegionFile file : batch) {
             exec.execute(() -> {
@@ -335,7 +339,13 @@ public class LinearRegionFile implements IRegionFile {
                 } catch (IOException e) {
                     LOGGER.error("Region file {} flush failed", file.regionFile, e);
                 } finally {
-                    file.flushQueued = false;
+                    synchronized (flushLock) {
+                        file.flushQueued = false;
+                        if (file.markedToSave) {
+                            file.flushQueued = true;
+                            pendingFlush.add(file);
+                        }
+                    }
                 }
             });
         }
@@ -343,8 +353,11 @@ public class LinearRegionFile implements IRegionFile {
 
     private void requestFlush() {
         if (flushQueued) return;
-        flushQueued = true;
-        pendingFlush.add(this);
+        synchronized (flushLock) {
+            if (flushQueued) return;
+            flushQueued = true;
+            pendingFlush.add(this);
+        }
         ensureFlushTick();
     }
 

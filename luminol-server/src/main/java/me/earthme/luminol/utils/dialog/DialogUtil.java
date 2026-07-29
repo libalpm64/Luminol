@@ -13,7 +13,7 @@ import net.minecraft.server.dialog.input.BooleanInput;
 import net.minecraft.server.dialog.input.NumberRangeInput;
 import net.minecraft.server.dialog.input.TextInput;
 import org.jetbrains.annotations.NotNull;
-import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 import java.util.*;
 
@@ -62,7 +62,7 @@ public class DialogUtil {
 
     public static DialogBuilder addInputs(Map<String, Pair<Object, String>> map, String commandPrefix, @NotNull DialogBuilder builder) {
         boolean hasInput = false;
-        JSONObject valueBuilder = new JSONObject();
+        Map<String, String> valueBuilder = new LinkedHashMap<>();
         Set<String> usedKeys = new HashSet<>();
         int keyCounter = 0;
 
@@ -127,7 +127,7 @@ public class DialogUtil {
 
             hasInput = true;
         }
-        String raw = commandPrefix + valueBuilder.toJSONString() + "$(missing)";
+        String raw = commandPrefix + JSONValue.toJSONString(valueBuilder) + "$(missing)";
         StringTemplate template = StringTemplate.fromString(raw);
         CommandTemplate confirmTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
         if (hasInput) {

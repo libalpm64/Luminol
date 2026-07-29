@@ -8,10 +8,10 @@ As part of: Petal (https://github.com/Bloom-host/Petal/blob/cc691540fb48240f38b3
 Licensed under: GPL-3.0 (https://github.com/Bloom-host/Petal/blob/cc691540fb48240f38b376f3d94c8b0db2b60d99/LICENSE)
 
 diff --git a/net/minecraft/world/entity/Mob.java b/net/minecraft/world/entity/Mob.java
-index 731330ae22e7954513475b7d7f7911dc8d379737..fc29654dd7ee3329edf1ccf705f45631d0ecc079 100644
+index 24171563af7c629bf2bf492fdc575e2bc67c361e..e7ebdbb8d77f841551c5ebb0f8e7b4402f6a4751 100644
 --- a/net/minecraft/world/entity/Mob.java
 +++ b/net/minecraft/world/entity/Mob.java
-@@ -829,11 +829,12 @@ public abstract class Mob extends LivingEntity implements Targeting, EquipmentUs
+@@ -842,11 +842,12 @@ public abstract class Mob extends LivingEntity implements Targeting, EquipmentUs
              return;
          }
          // Paper end - Allow nerfed mobs to jump and float

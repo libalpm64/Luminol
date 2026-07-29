@@ -9,6 +9,7 @@ public class SchedulableTickHack {
     }
 
     @Contract(pure = true)
+    @SuppressWarnings("unchecked")
     public static <T> T getState(@NonNull SchedulableTick tick) {
         return (T) tick.state;
     }

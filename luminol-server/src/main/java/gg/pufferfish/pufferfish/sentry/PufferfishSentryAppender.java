@@ -32,6 +32,7 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 
 import java.util.Map;
@@ -43,7 +44,7 @@ public class PufferfishSentryAppender extends AbstractAppender {
     private final Level logLevel;
 
     public PufferfishSentryAppender(Level logLevel) {
-        super("PufferfishSentryAdapter", new SentryFilter(), null);
+        super("PufferfishSentryAdapter", new SentryFilter(), null, true, Property.EMPTY_ARRAY);
         this.logLevel = logLevel;
     }
 

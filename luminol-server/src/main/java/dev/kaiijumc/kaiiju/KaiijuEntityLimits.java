@@ -17,7 +17,6 @@
 
 package dev.kaiijumc.kaiiju;
 
-import com.google.common.base.Throwables;
 import com.mojang.logging.LogUtils;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
@@ -76,12 +75,12 @@ public class KaiijuEntityLimits {
                 entityLimitsConfig.load(ENTITY_LIMITS_FILE);
             } catch (InvalidConfigurationException ex) {
                 Bukkit.getLogger().log(Level.SEVERE, "Could not load kaiiju_entity_limits.yml, please correct your syntax errors", ex);
-                throw Throwables.propagate(ex);
+                throw new RuntimeException(ex);
             } catch (IOException ignore) {
             }
         } else {
             if (setup) {
-                entityLimitsConfig.options().header(HEADER);
+                entityLimitsConfig.options().setHeader(HEADER.lines().toList());
                 entityLimitsConfig.options().copyDefaults(true);
                 entityLimitsConfig.set("enabled", enabled);
                 entityLimitsConfig.set("Axolotl.limit", 1000);
@@ -98,12 +97,12 @@ public class KaiijuEntityLimits {
 
         entityLimits = new Object2ObjectOpenHashMap<>();
         try (ScanResult scanResult = new ClassGraph().enableAllInfo().acceptPackages("net.minecraft.world.entity").scan()) {
-            Map<String, ClassInfo> entityClasses = new HashMap<>();
+            Map<String, Class<? extends Entity>> entityClasses = new HashMap<>();
             for (ClassInfo classInfo : scanResult.getAllClasses()) {
                 Class<?> entityClass = Class.forName(classInfo.getName());
                 if (Entity.class.isAssignableFrom(entityClass)) {
                     String entityName = extractEntityName(entityClass.getSimpleName());
-                    entityClasses.put(entityName, classInfo);
+                    entityClasses.put(entityName, entityClass.asSubclass(Entity.class));
                 }
             }
 
@@ -128,7 +127,7 @@ public class KaiijuEntityLimits {
                     removal = limit * 10;
                 }
 
-                entityLimits.put((Class<? extends Entity>) Class.forName(entityClasses.get(key).getName()), new EntityLimit(limit, removal));
+                entityLimits.put(entityClasses.get(key), new EntityLimit(limit, removal));
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

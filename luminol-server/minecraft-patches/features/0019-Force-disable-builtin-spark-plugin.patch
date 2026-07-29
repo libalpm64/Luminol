@@ -6,10 +6,10 @@ Subject: [PATCH] Force disable builtin spark plugin
 The spark passed down from paper has some memory leaking issue, so we fully removed it from the code to prevent that memory leaking issue.
 
 diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
-index 30bc88482af3e79bedd85f6ebca046041da12743..515414a63b95fb7318e136533aa6d8193ef3d4c5 100644
+index 83b9aab16124ddcc416f7b4cd95084e1c64fe5b7..7683c12d48d23dd43bce3d3b5633029c596930a5 100644
 --- a/net/minecraft/server/MinecraftServer.java
 +++ b/net/minecraft/server/MinecraftServer.java
-@@ -704,8 +704,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -672,8 +672,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          }
          // Paper end - Configurable player collision; Handle collideRule team for player collision toggle
          this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
@@ -20,7 +20,7 @@ index 30bc88482af3e79bedd85f6ebca046041da12743..515414a63b95fb7318e136533aa6d819
          io.papermc.paper.command.brigadier.PaperCommands.INSTANCE.setValid(); // Paper - reset invalid state for event fire below
          io.papermc.paper.plugin.lifecycle.event.LifecycleEventRunner.INSTANCE.callReloadableRegistrarEvent(io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents.COMMANDS, io.papermc.paper.command.brigadier.PaperCommands.INSTANCE, org.bukkit.plugin.Plugin.class, io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent.Cause.INITIAL); // Paper - call commands event for regular plugins
          this.server.getCommandMap().registerServerAliases(); // Paper - relocate initial CommandMap#registerServerAliases() call
-@@ -1122,7 +1122,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1087,7 +1087,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          Commands.COMMAND_SENDING_POOL.shutdownNow(); // Paper - Perf: Async command map building; Shutdown and don't bother finishing
          // CraftBukkit start
          if (this.server != null) {
@@ -29,7 +29,7 @@ index 30bc88482af3e79bedd85f6ebca046041da12743..515414a63b95fb7318e136533aa6d819
              this.server.disablePlugins();
              this.server.waitForAsyncTasksShutdown(); // Paper - Wait for Async Tasks during shutdown
          }
-@@ -1386,7 +1386,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1352,7 +1352,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
              this.statusIcon = this.loadStatusIcon().orElse(null);
              this.status = this.buildServerStatus();
  
@@ -38,7 +38,7 @@ index 30bc88482af3e79bedd85f6ebca046041da12743..515414a63b95fb7318e136533aa6d819
              // Folia start - region threading
              if (true) {
                  io.papermc.paper.threadedregions.RegionizedServer.getInstance().init(); // Folia - region threading - only after loading worlds
-@@ -1700,7 +1700,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1666,7 +1666,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
              }
  
              if (this.emptyTicks >= emptyTickThreshold) {
@@ -47,7 +47,7 @@ index 30bc88482af3e79bedd85f6ebca046041da12743..515414a63b95fb7318e136533aa6d819
                  if (this.emptyTicks == emptyTickThreshold) {
                      LOGGER.info("Server empty for {} seconds, pausing", this.pauseWhenEmptySeconds());
                      this.autoSave();
-@@ -1719,7 +1719,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1685,7 +1685,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                  // Paper end - avoid issues with certain tasks not processing during sleep
                  //this.server.spark.executeMainThreadTasks(); // Paper - spark // Folia - region threading
                  this.tickConnection();
@@ -56,7 +56,7 @@ index 30bc88482af3e79bedd85f6ebca046041da12743..515414a63b95fb7318e136533aa6d819
                  return;
              }
          }
-@@ -1732,7 +1732,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1698,7 +1698,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          };
          // Folia end - region threading
  
@@ -65,7 +65,7 @@ index 30bc88482af3e79bedd85f6ebca046041da12743..515414a63b95fb7318e136533aa6d819
          new com.destroystokyo.paper.event.server.ServerTickStartEvent((int)region.getCurrentTick()).callEvent(); // Paper - Server Tick Events // Folia - region threading
          // Folia start - region threading
          if (region != null) {
-@@ -1809,7 +1809,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1785,7 +1785,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          long remaining = scheduledEnd - endTime; // Folia - region ticking
          new com.destroystokyo.paper.event.server.ServerTickEndEvent((int)io.papermc.paper.threadedregions.RegionizedServer.getCurrentTick(), ((double)(endTime - startTime) / 1000000D), remaining).callEvent(); // Folia - region ticking
          // Paper end - Server Tick Events
@@ -75,10 +75,10 @@ index 30bc88482af3e79bedd85f6ebca046041da12743..515414a63b95fb7318e136533aa6d819
      }
  
 diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
-index 77fe0b3db3b48899cb1bafdbe177893760a6b9f8..e4d634c562b247a8eff6f0e383e72603629e1584 100644
+index 1ad4704523a3d90414ac514488207b1b5def9afd..1145d5839e621a02b7972c2ff1142f51db2237de 100644
 --- a/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -283,7 +283,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -239,7 +239,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          this.paperConfigurations.initializeWorldDefaultsConfiguration(this.registryAccess());
          // Paper end - initialize global and world-defaults configuration
          me.earthme.luminol.config.ConfigManager.loadConfigFiles(); // Luminol - load config file
@@ -87,7 +87,7 @@ index 77fe0b3db3b48899cb1bafdbe177893760a6b9f8..e4d634c562b247a8eff6f0e383e72603
          // Paper start - fix converting txt to json file; convert old users earlier after PlayerList creation but before file load/save
          if (this.convertOldUsers()) {
              this.services().nameToIdCache().save(false); // Paper
-@@ -293,7 +293,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -249,7 +249,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          org.spigotmc.WatchdogThread.doStart(org.spigotmc.SpigotConfig.timeoutTime, org.spigotmc.SpigotConfig.restartOnCrash); // Paper - start watchdog thread
          consoleThread.start(); // Paper - Enhance console tab completions for brigadier commands; start console thread after MinecraftServer.console & PaperConfig are initialized
          io.papermc.paper.command.PaperCommands.registerCommands(this); // Paper - setup /paper command

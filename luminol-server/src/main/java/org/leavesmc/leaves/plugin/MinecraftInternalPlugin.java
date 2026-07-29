@@ -54,6 +54,7 @@ public class MinecraftInternalPlugin extends PluginBase {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public @NotNull PluginDescriptionFile getDescription() {
         return pdf;
     }
@@ -79,6 +80,7 @@ public class MinecraftInternalPlugin extends PluginBase {
     }
 
     @Override
+    @SuppressWarnings("removal")
     public @NotNull PluginLoader getPluginLoader() {
         throw new UnsupportedOperationException("Not supported.");
     }

@@ -8,25 +8,25 @@ Some of changes from: Leaves (https://github.com/LeavesMC/Leaves/blob/6a2b9ee6b3
 Licensed under: GPL-3.0 (https://www.gnu.org/licenses/gpl-3.0.html)
 
 diff --git a/net/minecraft/network/Connection.java b/net/minecraft/network/Connection.java
-index a3a314d7bd1fde7efb3d8d76ffaa8d3df5fbcf81..efbbc1a40d203a2818eeda2a4e938b9a6117f1c3 100644
+index ecaa296f576c5c90fda89e0406d6552628ef5de3..a38d3bdd10cc3fa7ea7a70d8a2dd29133b38429a 100644
 --- a/net/minecraft/network/Connection.java
 +++ b/net/minecraft/network/Connection.java
 @@ -258,8 +258,8 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
-                 if (this.stopReadingPackets) {
-                     return;
-                 }
--                if (this.allPacketCounts != null ||
--                    io.papermc.paper.configuration.GlobalConfiguration.get().packetLimiter.overrides.containsKey(packet.getClass())) {
-+                if (!me.earthme.luminol.config.modules.misc.PaperPacketLimiterConfig.forceDisable && (this.allPacketCounts != null || // Luminol - Add config to force disable the packet limiter of Paper
-+                    io.papermc.paper.configuration.GlobalConfiguration.get().packetLimiter.overrides.containsKey(packet.getClass()))) { // Luminol - Add config to force disable the packet limiter of Paper
-                     long time = System.nanoTime();
-                     synchronized (PACKET_LIMIT_LOCK) {
-                         if (this.allPacketCounts != null) {
+             if (this.stopReadingPackets) {
+                 return;
+             }
+-            if (this.allPacketCounts != null ||
+-                io.papermc.paper.configuration.GlobalConfiguration.get().packetLimiter.overrides.containsKey(packet.getClass())) {
++            if (!me.earthme.luminol.config.modules.misc.PaperPacketLimiterConfig.forceDisable && (this.allPacketCounts != null ||
++                io.papermc.paper.configuration.GlobalConfiguration.get().packetLimiter.overrides.containsKey(packet.getClass()))) {
+                 long time = System.nanoTime();
+                 synchronized (PACKET_LIMIT_LOCK) {
+                     if (this.allPacketCounts != null) {
 diff --git a/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-index 04e498d7b3bae9d66f324003738a6cba82bfdd40..0d9c1f111a3af0bb9806e28bbf9e42709673b143 100644
+index e9c4944cbe22fef4975bd511cc352fe361472136..6c2ddd872a985e49be0c27d2c48bba7c302186a1 100644
 --- a/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 +++ b/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-@@ -876,7 +876,7 @@ public class ServerGamePacketListenerImpl
+@@ -892,7 +892,7 @@ public class ServerGamePacketListenerImpl
      public void handleCustomCommandSuggestions(final ServerboundCommandSuggestionPacket packet) {
          // PacketUtils.ensureRunningOnSameThread(packet, this, this.player.level()); // Paper - AsyncTabCompleteEvent; run this async
          // CraftBukkit start
@@ -35,7 +35,7 @@ index 04e498d7b3bae9d66f324003738a6cba82bfdd40..0d9c1f111a3af0bb9806e28bbf9e4270
              this.disconnectAsync(Component.translatable("disconnect.spam"), org.bukkit.event.player.PlayerKickEvent.Cause.SPAM); // Paper - Kick event cause // Paper - add proper async disconnect
              return;
          }
-@@ -2136,6 +2136,7 @@ public class ServerGamePacketListenerImpl
+@@ -2128,6 +2128,7 @@ public class ServerGamePacketListenerImpl
      private long lastLimitedPacket = -1;
  
      private boolean checkLimit(long timestamp) {
@@ -43,15 +43,15 @@ index 04e498d7b3bae9d66f324003738a6cba82bfdd40..0d9c1f111a3af0bb9806e28bbf9e4270
          if (!io.papermc.paper.configuration.GlobalConfiguration.get().spamLimiter.incomingPacketThreshold.enabled()) {
              return true;
          }
-@@ -2696,6 +2697,7 @@ public class ServerGamePacketListenerImpl
+@@ -2688,6 +2689,7 @@ public class ServerGamePacketListenerImpl
  
      // Spigot start - spam exclusions
-     private void detectRateSpam(String message) {
-+        if (me.earthme.luminol.config.modules.misc.PaperPacketLimiterConfig.forceDisable) return; // Leaves - disable
-         // CraftBukkit start - replaced with thread safe throttle
+     private void detectRateSpam(final TickThrottler throttler, final String message) {
++        if (me.earthme.luminol.config.modules.misc.PaperPacketLimiterConfig.forceDisable) return; // Luminol - Add config to force disable the packet limiter of Paper
          if (org.spigotmc.SpigotConfig.enableSpamExclusions) {
              for (String exclude : org.spigotmc.SpigotConfig.spamExclusions) {
-@@ -3484,7 +3486,7 @@ public class ServerGamePacketListenerImpl
+                 if (exclude != null && message.startsWith(exclude)) {
+@@ -3486,7 +3488,7 @@ public class ServerGamePacketListenerImpl
      @Override
      public void handlePlaceRecipe(final ServerboundPlaceRecipePacket packet) {
          // Paper start - auto recipe limit

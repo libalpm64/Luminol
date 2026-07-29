@@ -8,10 +8,10 @@ As part of: Kaiiju (https://github.com/KaiijuMC/Kaiiju/blob/c2b7aec8f7b418a39a2e
 Licensed under: GPL-3.0 (https://github.com/KaiijuMC/Kaiiju/blob/c2b7aec8f7b418a39a2ec408e6411e6f752379da/LICENSE)
 
 diff --git a/io/papermc/paper/threadedregions/RegionizedWorldData.java b/io/papermc/paper/threadedregions/RegionizedWorldData.java
-index df53efb5fb3bbb15cc4659324292094d5bf549d7..091a257c3089ff746b215c8400fd6a57764e1f18 100644
+index 4bbcedaefa3637424eb6592d14fe1bbf42132df9..de95a7bfdf0f2e179c7f87fc4018133e2293701e 100644
 --- a/io/papermc/paper/threadedregions/RegionizedWorldData.java
 +++ b/io/papermc/paper/threadedregions/RegionizedWorldData.java
-@@ -351,6 +351,7 @@ public final class RegionizedWorldData {
+@@ -354,6 +354,7 @@ public final class RegionizedWorldData {
      private final IteratorSafeOrderedReferenceSet<Mob> navigatingMobs = new IteratorSafeOrderedReferenceSet<>();
      public final ReferenceList<Entity> trackerEntities = new ReferenceList<>(EMPTY_ENTITY_ARRAY); // Moonrise - entity tracker
      public final ReferenceList<Entity> trackerUnloadedEntities = new ReferenceList<>(EMPTY_ENTITY_ARRAY); // Moonrise - entity tracker
@@ -20,10 +20,10 @@ index df53efb5fb3bbb15cc4659324292094d5bf549d7..091a257c3089ff746b215c8400fd6a57
      // block ticking
      private final ObjectLinkedOpenHashSet<BlockEventData> blockEvents = new ObjectLinkedOpenHashSet<>();
 diff --git a/net/minecraft/server/level/ServerLevel.java b/net/minecraft/server/level/ServerLevel.java
-index c7cdf8a2d6856e7cac1d0809bc9bc5e9c45ba84f..0e323ab55346f4790ca936f227917e5809e5e05c 100644
+index c4d9d890db784d376b876d70f0468df6edb75168..0641b98ef3298eb682ceae83f60b730f3bf90103 100644
 --- a/net/minecraft/server/level/ServerLevel.java
 +++ b/net/minecraft/server/level/ServerLevel.java
-@@ -927,6 +927,7 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
+@@ -917,6 +917,7 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
              }
  
              foliaProfiler.startTimer(ca.spottedleaf.leafprofiler.LProfilerRegistry.ACTIVATE_ENTITIES); try { // Folia - profiler
@@ -31,7 +31,7 @@ index c7cdf8a2d6856e7cac1d0809bc9bc5e9c45ba84f..0e323ab55346f4790ca936f227917e58
              io.papermc.paper.entity.activation.ActivationRange.activateEntities(this); // Paper - EAR
              } finally { foliaProfiler.stopTimer(ca.spottedleaf.leafprofiler.LProfilerRegistry.ACTIVATE_ENTITIES); } // Folia - profiler
              foliaProfiler.startTimer(ca.spottedleaf.leafprofiler.LProfilerRegistry.ENTITY_TICK); try { // Folia - profiler
-@@ -948,6 +949,13 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
+@@ -938,6 +939,13 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
  
                                          entity.stopRiding();
                                      }
@@ -45,7 +45,7 @@ index c7cdf8a2d6856e7cac1d0809bc9bc5e9c45ba84f..0e323ab55346f4790ca936f227917e58
  
                                      profiler.push("tick");
                                      this.guardEntityTick(this::tickNonPassenger, entity);
-@@ -957,6 +965,7 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
+@@ -947,6 +955,7 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
                          }
                      }
                  );

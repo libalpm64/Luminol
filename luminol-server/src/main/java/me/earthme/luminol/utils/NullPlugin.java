@@ -33,6 +33,7 @@ public class NullPlugin extends PluginBase {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public PluginDescriptionFile getDescription() {
         return pdf;
     }
@@ -80,6 +81,7 @@ public class NullPlugin extends PluginBase {
     }
 
     @Override
+    @SuppressWarnings("removal")
     public PluginLoader getPluginLoader() {
         throw new UnsupportedOperationException("Not supported.");
     }

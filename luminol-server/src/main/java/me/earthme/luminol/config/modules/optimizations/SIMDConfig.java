@@ -21,6 +21,7 @@ public class SIMDConfig implements IConfigModule {
     public static boolean enabled = true;
 
     @Override
+    @SuppressWarnings("deprecation")
     public void onLoaded(CommentedFileConfig configInstance, @Nullable Set<Exception> e) {
         if (!enabled) {
             return;

@@ -5,10 +5,10 @@ Subject: [PATCH] Luminol Config System
 
 
 diff --git a/net/minecraft/server/Main.java b/net/minecraft/server/Main.java
-index aa15c5c83f04e518c30a9dee7945062099197c25..143ad4e342b184aa02b6fbbe81508e244eebc7a2 100644
+index e2939cc39a8c103e4c4d7b01d39b5546486e4fbc..a557d488e4e289a61aeb9aed0cc133a0a7ce8f8c 100644
 --- a/net/minecraft/server/Main.java
 +++ b/net/minecraft/server/Main.java
-@@ -104,6 +104,7 @@ public class Main {
+@@ -110,6 +110,7 @@ public class Main {
                  JvmProfiler.INSTANCE.start(Environment.SERVER);
              }
  
@@ -17,10 +17,10 @@ index aa15c5c83f04e518c30a9dee7945062099197c25..143ad4e342b184aa02b6fbbe81508e24
              Bootstrap.bootStrap();
              Bootstrap.validate();
 diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
-index 8ec86d7485efbb275c85d8226ea93a7bbd72342c..471107d4083897c5ba92f6bfcce25194b62dbc00 100644
+index 6f13870a1b463049dd37cf1c65d0bdecfc35b5c4..a49c46eb7df50fc3c5587a2c3668ab6edc887107 100644
 --- a/net/minecraft/server/MinecraftServer.java
 +++ b/net/minecraft/server/MinecraftServer.java
-@@ -1203,6 +1203,9 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1169,6 +1169,9 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
              ca.spottedleaf.moonrise.common.util.MoonriseCommon.haltExecutors();
          }
          // Paper end - rewrite chunk system
@@ -31,10 +31,10 @@ index 8ec86d7485efbb275c85d8226ea93a7bbd72342c..471107d4083897c5ba92f6bfcce25194
          Util.shutdownExecutors();
          this.onServerExit();
 diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
-index 5f89d29eaeeb4c63b8b9e034d440204f518efec2..77fe0b3db3b48899cb1bafdbe177893760a6b9f8 100644
+index cd5551c0221ad2a7b5c7d452d8d91ffc9711c3ee..1ad4704523a3d90414ac514488207b1b5def9afd 100644
 --- a/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -282,6 +282,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -238,6 +238,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          this.paperConfigurations.initializeGlobalConfiguration(this.registryAccess());
          this.paperConfigurations.initializeWorldDefaultsConfiguration(this.registryAccess());
          // Paper end - initialize global and world-defaults configuration

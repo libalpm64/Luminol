@@ -3,15 +3,17 @@ From: root <root@localhost>
 Date: Sun, 5 Jul 2026 00:00:00 +0000
 Subject: [PATCH] Remove damageable+stackable item validation for 32k items
 
+
 diff --git a/net/minecraft/world/item/ItemStack.java b/net/minecraft/world/item/ItemStack.java
-index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000 100644
+index 0b016af71414cf6527839b178996115129e43323..20c4d8ae16d9c8af14321188dbf35e8234eb0891 100644
 --- a/net/minecraft/world/item/ItemStack.java
 +++ b/net/minecraft/world/item/ItemStack.java
-@@ -289,6 +289,6 @@ public class ItemStack {
+@@ -286,7 +286,7 @@ public final class ItemStack implements DataComponentHolder, ItemInstance, Chang
      }
  
      private static DataResult<?> validateComponents(final DataComponentMap components) {
 -        if (components.has(DataComponents.MAX_DAMAGE) && components.getOrDefault(DataComponents.MAX_STACK_SIZE, 1) > 1) {
 +        if (false && components.has(DataComponents.MAX_DAMAGE) && components.getOrDefault(DataComponents.MAX_STACK_SIZE, 1) > 1) {
              return DataResult.error(() -> "Item cannot be both damageable and stackable");
-         } else {
+         }
+ 

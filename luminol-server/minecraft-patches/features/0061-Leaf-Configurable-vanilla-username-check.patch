@@ -8,7 +8,7 @@ A part of Leaf(https://github.com/Winds-Studio/Leaf/blob/edb0504069139beaa6f39ef
 License: https://github.com/Winds-Studio/Leaf/blob/edb0504069139beaa6f39efa4702370c2576b3fc/LICENSE.md
 
 diff --git a/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 82f4680c4b12a09ce91216be9a0b598b387d9fd8..8a4939e801cf80ec676d276f4c949775b1528d26 100644
+index deee051c103f9797f4612e06c12f293ec54724ac..911fb0912c7bc6ab0e29c03a21c6bddb248bbc0a 100644
 --- a/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -167,11 +167,20 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
@@ -40,7 +40,7 @@ index 82f4680c4b12a09ce91216be9a0b598b387d9fd8..8a4939e801cf80ec676d276f4c949775
                          GameProfile gameprofile = ServerLoginPacketListenerImpl.this.createOfflineProfile(ServerLoginPacketListenerImpl.this.requestedUsername); // Spigot
 +                        // Leaf start - Configurable vanilla username check
 +                        if (me.earthme.luminol.config.modules.misc.UsernameCheckConfig.allowOldPlayersJoin) {
-+                            if (server.playerDataStorage.load(new net.minecraft.server.players.NameAndId(gameprofile)).orElse(null) != null) {
++                            if (server.getPlayerList().playerIo.load(new net.minecraft.server.players.NameAndId(gameprofile)).orElse(null) != null) {
 +                                server.getPlayerList().playedPlayers.add(packet.name());
 +                            } else if (allPrevChecksPassed) {
 +                                Validate.validState(StringUtil.isReasonablePlayerName(packet.name()), "Invalid characters in username");
@@ -50,7 +50,7 @@ index 82f4680c4b12a09ce91216be9a0b598b387d9fd8..8a4939e801cf80ec676d276f4c949775
  
                          gameprofile = ServerLoginPacketListenerImpl.this.callPlayerPreLoginEvents(gameprofile); // Paper - Add more fields to AsyncPlayerPreLoginEvent
                          ServerLoginPacketListenerImpl.LOGGER.info("UUID of player {} is {}", gameprofile.name(), gameprofile.id());
-@@ -343,7 +361,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -341,7 +359,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
          server.getPluginManager().callEvent(asyncEvent);
          profile = asyncEvent.getPlayerProfile();
          profile.complete(true); // Paper - setPlayerProfileAPI
@@ -60,7 +60,7 @@ index 82f4680c4b12a09ce91216be9a0b598b387d9fd8..8a4939e801cf80ec676d276f4c949775
          uniqueId = gameprofile.id();
          // Paper end - Add more fields to AsyncPlayerPreLoginEvent
 diff --git a/net/minecraft/server/players/CachedUserNameToIdResolver.java b/net/minecraft/server/players/CachedUserNameToIdResolver.java
-index aecbdddf4cf3ab627477156cd314f2872e7a5dbb..d2da9f3c5e53ceaeb85c6d3d7443e124a4d93bb8 100644
+index 7443744e3f256983e52a1cefcaf66082e4a46a7b..dbfe26a12088c5739911f7357ab043b158567a79 100644
 --- a/net/minecraft/server/players/CachedUserNameToIdResolver.java
 +++ b/net/minecraft/server/players/CachedUserNameToIdResolver.java
 @@ -67,7 +67,7 @@ public class CachedUserNameToIdResolver implements UserNameToIdResolver {
@@ -68,15 +68,15 @@ index aecbdddf4cf3ab627477156cd314f2872e7a5dbb..d2da9f3c5e53ceaeb85c6d3d7443e124
  
      private Optional<NameAndId> lookupGameProfile(final GameProfileRepository profileRepository, final String name) {
 -        if (!StringUtil.isValidPlayerName(name)) {
-+        if (!StringUtil.isValidPlayerName(name, false)) { // Leaf - Configurable vanilla username check - Directly return, skip unnecessary following logic
++        if (!StringUtil.isValidPlayerName(name, false)) { // Leaf - Configurable vanilla username check
              return this.createUnknownProfile(name);
-         } else {
-             final boolean shouldLookup = !org.apache.commons.lang3.StringUtils.isBlank(name) // Paper - Don't lookup a profile with a blank name
+         }
+ 
 diff --git a/net/minecraft/server/players/PlayerList.java b/net/minecraft/server/players/PlayerList.java
-index 63b81f30b8d813a7986ae72842fdc2d3097fa103..c9d3b000a328fe3583a7053a94c72dc003c1e10c 100644
+index 7479b27d4357e7046d5aebd725e0dfe62b57dfb9..7b6a7742140b157a97244f3607a81cb32126217b 100644
 --- a/net/minecraft/server/players/PlayerList.java
 +++ b/net/minecraft/server/players/PlayerList.java
-@@ -135,6 +135,7 @@ public abstract class PlayerList {
+@@ -134,6 +134,7 @@ public abstract class PlayerList {
      private org.bukkit.craftbukkit.CraftServer cserver;
      private final Map<String,ServerPlayer> playersByName = new java.util.HashMap<>();
      public @Nullable String collideRuleTeamName; // Paper - Configurable player collision
@@ -84,16 +84,18 @@ index 63b81f30b8d813a7986ae72842fdc2d3097fa103..c9d3b000a328fe3583a7053a94c72dc0
  
      // Folia start - region threading
      private final Object connectionsStateLock = new Object();
-@@ -585,6 +586,7 @@ public abstract class PlayerList {
-         player.getAdvancements().stopListening();
+@@ -581,6 +582,9 @@ public abstract class PlayerList {
+         player.getAdvancements().clearTriggers();
          this.players.remove(player);
          this.playersByName.remove(player.getScoreboardName().toLowerCase(java.util.Locale.ROOT)); // Spigot
-+        if (me.earthme.luminol.config.modules.misc.UsernameCheckConfig.allowOldPlayersJoin) this.playedPlayers.remove(player.getGameProfile().name()); // Leaf - Configurable vanilla username check
++        if (me.earthme.luminol.config.modules.misc.UsernameCheckConfig.allowOldPlayersJoin) {
++            this.playedPlayers.remove(player.getGameProfile().name());
++        } // Leaf - Configurable vanilla username check
          this.server.getCustomBossEvents().onPlayerDisconnect(player);
          UUID uuid = player.getUUID();
          ServerPlayer serverPlayer = this.playersByUUID.get(uuid);
 diff --git a/net/minecraft/util/StringUtil.java b/net/minecraft/util/StringUtil.java
-index 74f9da2d42cc4339ae28f344acaa80185b946f4d..9e35b266f77f31b4e5c3329c7476fc6312bc4679 100644
+index 7957e0cfc43909c5268698a11c4933d20b4d9155..3de226b84f5c72ae277384b3fda4580a7fa2b43d 100644
 --- a/net/minecraft/util/StringUtil.java
 +++ b/net/minecraft/util/StringUtil.java
 @@ -64,6 +64,15 @@ public class StringUtil {
@@ -126,7 +128,7 @@ index 74f9da2d42cc4339ae28f344acaa80185b946f4d..9e35b266f77f31b4e5c3329c7476fc63
              return false;
          }
 diff --git a/net/minecraft/world/item/component/ResolvableProfile.java b/net/minecraft/world/item/component/ResolvableProfile.java
-index 8b554b35c5670daf594d91cb276f93735242eb21..f259cf714cd089ff9a717a072d73b2f4667b5d45 100644
+index f1b62a6e0d8176d8ba1875e78cc730ee55b1b0c1..3312a751bdd71080bf429990490061bfbf86b758 100644
 --- a/net/minecraft/world/item/component/ResolvableProfile.java
 +++ b/net/minecraft/world/item/component/ResolvableProfile.java
 @@ -68,6 +68,30 @@ public abstract sealed class ResolvableProfile implements TooltipProvider permit

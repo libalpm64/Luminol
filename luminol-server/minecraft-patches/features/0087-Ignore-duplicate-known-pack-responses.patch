@@ -13,6 +13,7 @@ index b80ff19799e9e05f5709c113ee938f8d01d0acc4..05384a70763a8aab25fc1dfc82cfcfa0
      public void handleSelectKnownPacks(final ServerboundSelectKnownPacks packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.server.packetProcessor());
 -        if (this.synchronizeRegistriesTask == null) {
+-            throw new IllegalStateException("Unexpected response from client: received pack selection, but no negotiation ongoing");
 +        // Luminol start - Ignore duplicate known-pack responses
 +        SynchronizeRegistriesTask task = this.synchronizeRegistriesTask;
 +        if (task == null || this.currentTask != task) {

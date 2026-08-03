@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: libalpm64 <159192189+libalpm64@users.noreply.github.com>
+Date: Mon, 3 Aug 2026 13:29:14 -0400
+Subject: [PATCH] Luminol: Add fast exact binary NBT size method to
+ CraftItemStack
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
+index 3eea7b5e12a440162ca07113a59cd5ccacf0dd2d..d626d1c58026fcd172633f575e4810228a012fb3 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
+@@ -417,6 +417,24 @@ public final class CraftItemStack extends ItemStack {
+         return ret;
+     }
+ 
++    // Luminol start - fast exact binary NBT size
++    // Returns this item's encoded NBT size in bytes.
++    public int getNbtSizeBytes() {
++        if (this.handle == null || this.handle.isEmpty()) {
++            return 0;
++        }
++        final CompoundTag tag = (CompoundTag) net.minecraft.world.item.ItemStack.CODEC.encodeStart(
++            CraftRegistry.getMinecraftRegistry().createSerializationContext(NbtOps.INSTANCE),
++            this.handle
++        ).getOrThrow();
++        return tag.sizeInBytes();
++    }
++    // Luminol end - fast exact binary NBT size
++
+     @Override
+     public Map<Enchantment, Integer> getEnchantments() {
+         io.papermc.paper.datacomponent.item.ItemEnchantments itemEnchantments = this.getData(DataComponentTypes.ENCHANTMENTS); // empty constant might be useful here

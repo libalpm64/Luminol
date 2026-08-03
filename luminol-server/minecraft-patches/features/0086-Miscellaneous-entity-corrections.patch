@@ -5,7 +5,7 @@ Subject: [PATCH] Miscellaneous entity corrections
 
 
 diff --git a/net/minecraft/world/entity/vehicle/minecart/AbstractMinecart.java b/net/minecraft/world/entity/vehicle/minecart/AbstractMinecart.java
-index 0ae8b5222c5f2f608af352cbaa866c493dd065aa..005515fb2417f40784b1ac038dab080abc324046 100644
+index 0ae8b5222c5f2f608af352cbaa866c493dd065aa..40752f751fc9f5a60e8cb73cd83ae166b8e1e3c7 100644
 --- a/net/minecraft/world/entity/vehicle/minecart/AbstractMinecart.java
 +++ b/net/minecraft/world/entity/vehicle/minecart/AbstractMinecart.java
 @@ -405,6 +405,7 @@ public abstract class AbstractMinecart extends VehicleEntity {

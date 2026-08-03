@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: libalpm64 <159192189+libalpm64@users.noreply.github.com>
+Date: Mon, 3 Aug 2026 01:42:49 -0400
+Subject: [PATCH] Luminol - Optimize chunk decoration and NBT write hot paths
+
+
+diff --git a/net/minecraft/nbt/CompoundTag.java b/net/minecraft/nbt/CompoundTag.java
+index b9f6aa790159b2df712244c44c55d6393c837d16..7ab9f36ca3d88db34a256490e8ad96e2b83e370d 100644
+--- a/net/minecraft/nbt/CompoundTag.java
++++ b/net/minecraft/nbt/CompoundTag.java
+@@ -170,9 +170,8 @@ public final class CompoundTag implements Tag {
+ 
+     @Override
+     public void write(final DataOutput output) throws IOException {
+-        for (String key : this.tags.keySet()) {
+-            Tag tag = this.tags.get(key);
+-            writeNamedTag(key, tag, output);
++        for (Map.Entry<String, Tag> entry : this.tags.entrySet()) { // Luminol - iterate entries, avoids double map lookup
++            writeNamedTag(entry.getKey(), entry.getValue(), output);
+         }
+ 
+         output.writeByte(0);
+diff --git a/net/minecraft/world/level/chunk/ChunkGenerator.java b/net/minecraft/world/level/chunk/ChunkGenerator.java
+index bac2047025bf133d14438b5f667bb12401b5cdca..e4aa49cd490325f097a60fe3bc8a196c9e14256a 100644
+--- a/net/minecraft/world/level/chunk/ChunkGenerator.java
++++ b/net/minecraft/world/level/chunk/ChunkGenerator.java
+@@ -85,6 +85,8 @@ public abstract class ChunkGenerator {
+         .dispatchStable(ChunkGenerator::codec, Function.identity());
+     protected final BiomeSource biomeSource;
+     private final Supplier<List<FeatureSorter.StepFeatureData>> featuresPerStep;
++    private volatile Map<Integer, List<Structure>> cachedStructuresByStep; // Luminol - memoize per-chunk structure grouping
++    private volatile Registry<Structure> cachedStructuresByStepRegistry; // Luminol - memoize per-chunk structure grouping
+     public final Function<Holder<Biome>, BiomeGenerationSettings> generationSettingsGetter;
+ 
+     public ChunkGenerator(final BiomeSource biomeSource) {
+@@ -344,8 +346,12 @@ public abstract class ChunkGenerator {
+             SectionPos sectionPos = SectionPos.of(centerPos, level.getMinSectionY());
+             BlockPos origin = sectionPos.origin();
+             Registry<Structure> structuresRegistry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+-            Map<Integer, List<Structure>> structuresByStep = structuresRegistry.stream()
+-                .collect(Collectors.groupingBy(structure -> structure.step().ordinal()));
++            Map<Integer, List<Structure>> structuresByStep = this.cachedStructuresByStep;
++            if (structuresByStep == null || this.cachedStructuresByStepRegistry != structuresRegistry) {
++                structuresByStep = structuresRegistry.stream().collect(Collectors.groupingBy(structure -> structure.step().ordinal()));
++                this.cachedStructuresByStep = structuresByStep;
++                this.cachedStructuresByStepRegistry = structuresRegistry;
++            }
+             List<FeatureSorter.StepFeatureData> featureList = this.featuresPerStep.get();
+             // Leaf start - Matter - Secure Seed
+             WorldgenRandom random = me.earthme.luminol.config.modules.function.SecureSeedConfig.enabled

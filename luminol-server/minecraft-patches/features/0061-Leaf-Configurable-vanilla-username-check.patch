@@ -8,7 +8,7 @@ A part of Leaf(https://github.com/Winds-Studio/Leaf/blob/edb0504069139beaa6f39ef
 License: https://github.com/Winds-Studio/Leaf/blob/edb0504069139beaa6f39efa4702370c2576b3fc/LICENSE.md
 
 diff --git a/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index deee051c103f9797f4612e06c12f293ec54724ac..911fb0912c7bc6ab0e29c03a21c6bddb248bbc0a 100644
+index deee051c103f9797f4612e06c12f293ec54724ac..e65296c0598172a7b3760f3496a903257c559cc6 100644
 --- a/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -167,11 +167,20 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,

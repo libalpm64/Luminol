@@ -1,0 +1,100 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: libalpm64 <159192189+libalpm64@users.noreply.github.com>
+Date: Thu, 6 Aug 2026 03:35:56 -0400
+Subject: [PATCH] Sanitize oversized map decoration names
+
+
+diff --git a/net/minecraft/world/level/saveddata/maps/MapDecoration.java b/net/minecraft/world/level/saveddata/maps/MapDecoration.java
+index eb680797ad3ced5add2dca67c3400750aafbbca6..08c5c3eb046151bbcd4709fb46aa2320bac96511 100644
+--- a/net/minecraft/world/level/saveddata/maps/MapDecoration.java
++++ b/net/minecraft/world/level/saveddata/maps/MapDecoration.java
+@@ -2,6 +2,8 @@ package net.minecraft.world.level.saveddata.maps;
+ 
+ import java.util.Optional;
+ import net.minecraft.core.Holder;
++import net.minecraft.nbt.NbtOps;
++import net.minecraft.nbt.Tag;
+ import net.minecraft.network.RegistryFriendlyByteBuf;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.ComponentSerialization;
+@@ -26,8 +28,28 @@ public record MapDecoration(Holder<MapDecorationType> type, byte x, byte y, byte
+ 
+     public MapDecoration {
+         rot = (byte)(rot & 15);
++        name = sanitizeName(name);
+     }
+ 
++    // Luminol start - sanitize map decoration names
++    static Optional<Component> sanitizeName(final Optional<Component> name) {
++        return name.filter(component -> {
++            try {
++                if (component.getString(MAX_NAME_PLAIN_LENGTH + 1).length() > MAX_NAME_PLAIN_LENGTH) {
++                    return false;
++                }
++                Tag encoded = ComponentSerialization.CODEC.encodeStart(NbtOps.INSTANCE, component).getOrThrow();
++                return encoded.sizeInBytes() <= MAX_NAME_ENCODED_BYTES;
++            } catch (RuntimeException ignored) {
++                return false;
++            }
++        });
++    }
++
++    private static final int MAX_NAME_PLAIN_LENGTH = 256;
++    private static final int MAX_NAME_ENCODED_BYTES = 4096;
++    // Luminol end - sanitize map decoration names
++
+     public Identifier getSpriteLocation() {
+         return this.type.value().assetId();
+     }
+diff --git a/net/minecraft/world/level/saveddata/maps/MapItemSavedData.java b/net/minecraft/world/level/saveddata/maps/MapItemSavedData.java
+index a9201522bdca5a6e6aae48624d3f95fcb0e3d941..c51794697df0f92e95b608b90dc2320338826f5a 100644
+--- a/net/minecraft/world/level/saveddata/maps/MapItemSavedData.java
++++ b/net/minecraft/world/level/saveddata/maps/MapItemSavedData.java
+@@ -145,10 +145,14 @@ public class MapItemSavedData extends SavedData {
+             this.colors = colors.array();
+         }
+ 
+-        for (MapBanner banner : banners) {
++        boolean sanitizedBanner = false; // Luminol - sanitize map decoration names
++        for (MapBanner loadedBanner : banners) {
++            MapBanner banner = sanitizeBanner(loadedBanner); // Luminol - sanitize map decoration names
++            sanitizedBanner |= banner != loadedBanner; // Luminol - sanitize map decoration names
+             this.bannerMarkers.put(banner.getId(), banner);
+             this.addDecoration(banner.getDecoration(), null, banner.getId(), banner.pos().getX(), banner.pos().getZ(), 180.0, banner.name().orElse(null));
+         }
++        if (sanitizedBanner) this.setDirty(); // Luminol - sanitize map decoration names
+ 
+         for (MapFrame frame : frames) {
+             this.frameMarkers.put(frame.getId(), frame);
+@@ -448,6 +452,7 @@ public class MapItemSavedData extends SavedData {
+             if (banner == null) {
+                 return false;
+             }
++            banner = sanitizeBanner(banner); // Luminol - sanitize map decoration names
+ 
+             if (this.bannerMarkers.remove(banner.getId(), banner)) {
+                 this.removeDecoration(banner.getId());
+@@ -472,7 +477,7 @@ public class MapItemSavedData extends SavedData {
+         while (iterator.hasNext()) {
+             MapBanner expected = iterator.next();
+             if (expected.pos().getX() == x && expected.pos().getZ() == z) {
+-                MapBanner current = MapBanner.fromWorld(level, expected.pos());
++                MapBanner current = sanitizeBanner(MapBanner.fromWorld(level, expected.pos())); // Luminol - sanitize map decoration names
+                 if (!expected.equals(current)) {
+                     iterator.remove();
+                     this.removeDecoration(expected.getId());
+@@ -486,6 +491,14 @@ public class MapItemSavedData extends SavedData {
+         return this.bannerMarkers.values();
+     }
+ 
++    // Luminol start - sanitize map decoration names
++    private static @Nullable MapBanner sanitizeBanner(final @Nullable MapBanner banner) {
++        if (banner == null) return null;
++        Optional<Component> name = MapDecoration.sanitizeName(banner.name());
++        return name.equals(banner.name()) ? banner : new MapBanner(banner.pos(), banner.color(), name);
++    }
++    // Luminol end - sanitize map decoration names
++
+     public synchronized void removedFromFrame(final BlockPos pos, final int entityID) { // Folia - make map data thread-safe
+         this.removeDecoration(getFrameKey(entityID));
+         this.frameMarkers.remove(MapFrame.frameId(pos));

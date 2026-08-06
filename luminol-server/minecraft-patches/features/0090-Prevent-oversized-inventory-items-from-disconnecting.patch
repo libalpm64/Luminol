@@ -16,6 +16,7 @@ index 1879ed63e5bf1d39756e69b1943a72c0769fcfe7..dd9983d35e592061b9c25af4fe6a37dd
 +    }
 +
 +    @Override
++    public boolean packetTooLarge(final net.minecraft.network.Connection connection) {
 +        connection.send(new ClientboundContainerSetSlotPacket(this.containerId, this.stateId, this.slot, ItemStack.EMPTY));
 +        return true;
 +    }
